@@ -15,7 +15,8 @@ The cost for each individual trajectories is calculated by the formula
 vector to the end point of trajectory : $[traj_n - pose_vehicle]$, where $n \in \text{1:trajectory length}$
 vector to the goal  : $[pose_goal - pose_vehicle]$
 
-heading angle is : \mathbf{unit vector}_goal \cdot \mathbf{unit vector}_traj
+heading angle is the dot product between $vector_goal$ and $vector_traj$
+
 heading cost = $(1+heading angle)/2$ to include the cost between 0 and 1
 
 
