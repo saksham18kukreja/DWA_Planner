@@ -17,7 +17,7 @@ vector to the goal  : $[pose_g - pose_v]$ where $pose_g$ is the pose of the goal
 
 heading angle is the dot product between $vector_g$ and $vector_t$
 
-heading cost = $(1+heading angle)/2$ to include the cost between 0 and 1
+heading cost = $(1+\text{heading angle})/2$ to include the cost between 0 and 1
 
 ## 2. Obstacle Cost
 Obstacle cost is simply the euclidean distance between the final point of the trajctory with each obstacle inside the dynamic window.
