@@ -28,3 +28,7 @@ Obstacle cost: $1-(1/\text{total distance})$
 
 ## 3. Desired Speed Cost
 Desired Speed cost is the used set the target velocity for the vehicle and is given by $\text{vehicle current velocity}/ \text{desired velocity}$
+
+Total cost for each trajectory is based on a weighted sum of each individual cost and weights are set based on the requirements.
+
+The trajectory with the highest cost is selected and the steering angle of that trajectory is used to direct the vehicle.
