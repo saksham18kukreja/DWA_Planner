@@ -39,6 +39,7 @@ The trajectory with the highest cost is selected and the steering angle of that 
 
 The planner also works on a receding horizon approach to follow the next goal point(red circles) when the previous goal has been reached<br>
 The obstacles are in blue color.
+"1.5" on the top is the desired velocity in m/sec
 
 ### 2. Dynamic Window
 ![video](https://github.com/saksham18kukreja/DWA_Planner/blob/main/media/video_window.gif)
