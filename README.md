@@ -32,3 +32,15 @@ Desired Speed cost is the used set the target velocity for the vehicle and is gi
 Total cost for each trajectory is based on a weighted sum of each individual cost and weights are set based on the requirements.
 
 The trajectory with the highest cost is selected and the steering angle of that trajectory is used to direct the vehicle.
+
+## Media
+### 1. Trajectory following and obstacle avoidance
+![video](https://github.com/saksham18kukreja/DWA_Planner/blob/main/media/video.gif)
+
+The planner also works on a receding horizon approach to follow the next goal point(red circles) when the previous goal has been reached<br?
+The obstacles are in blue color.
+
+### 2. Dynamic Window
+![video](https://github.com/saksham18kukreja/DWA_Planner/blob/main/media/video_window.gif)
+
+The dynamic window is generated based on the current vehicle position and the size of the window is an adjustable parameter.
