@@ -12,8 +12,8 @@ The optimal steering angle of the vehicle to avoid these obstacles and follow th
 The heading error of the vehicle is calculated as the difference of the final yaw of the vehicle at the end of theses sampled trajectories and the pose of the goal point.
 The cost for each individual trajectories is calculated by the formula 
 
-vector to the end point of trajectory : $[traj_n - pose_vehicle]$, where $n \in \text{1:trajectory length}$
-vector to the goal  : $[pose_goal - pose_vehicle]$
+vector to the end point of trajectory : $[traj_n - pose_v]$, where $n \in \text{1:trajectory length}$ and $pose_v$ is the current vehicle pose
+vector to the goal  : $[pose_g - pose_v]$ where $pose_g$ is the pose of the goal point and $pose_v$ is the current vehicle pose
 
 heading angle is the dot product between $vector_goal$ and $vector_traj$
 
