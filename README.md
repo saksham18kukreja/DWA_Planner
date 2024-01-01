@@ -23,5 +23,5 @@ heading cost = $(1+heading angle)/2$ to include the cost between 0 and 1
 Obstacle cost is simply the euclidean distance between the final point of the trajctory with each obstacle inside the dynamic window.
 Highest cost is given the obstacle with the least euclidean distance
 
-Obstacle cost: $1-(1/total distance)$
+Obstacle cost: $1-(1/total \quad distance)$
 
