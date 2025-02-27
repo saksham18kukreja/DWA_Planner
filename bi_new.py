@@ -20,6 +20,7 @@ time = 2.5
 dt = 0.5    
 robot_radius = 3
 obstacle_radius = 1 
+future_goal = 30
 
 # vehicle = VehicleFootprint()
 vehicle_boundary = []
@@ -46,7 +47,7 @@ GOAL_THRESHOLD = 1
 num_digit = 15
 # local_goal = 100
 
-GOAL_COST_GAIN = 1
+GOAL_COST_GAIN = 5
 SPEED_COST_GAIN = 1 
 OBS_COST_GAIN = 1
 
@@ -169,7 +170,7 @@ def generate_trajectory(curr_state, velocity, steering):
     return traj_pt
 
 
-def calc_to_goal_cost(traj, goal):
+def calc_to_goal_cost(traj, goal, current_state):
     theta_goal = np.arctan(goal.y/goal.x)
     traj_vec = [traj[track_pt].x - current_state.x, traj[track_pt].y - current_state.y]
     goal_vec = [goal.x - current_state.x, goal.y - current_state.y]
@@ -223,8 +224,7 @@ def main_dwa_loop(goal, obs_list, current_state):
         traj = generate_trajectory(traj_point, velocity_upper, steering)
         trajectory.append(traj)
 
-
-        goal_cost = calc_to_goal_cost(traj, goal)
+        goal_cost = calc_to_goal_cost(traj, goal, current_state)
         speed_cost = calc_to_speed_cost(traj, velocity_upper)
         obstacle_cost = calc_to_obs_cost(traj, obs_list)
         final_cost = GOAL_COST_GAIN*goal_cost + SPEED_COST_GAIN*speed_cost + OBS_COST_GAIN*obstacle_cost
@@ -260,15 +260,28 @@ def main_loop(current_state,goal, obs_list):
     return next_state, best_traj, all_traj
 
 
+def generate_waypoints():
+    lower_bound = 0
+    upper_bound = 150
+    num_points = 10
+    points_x = np.linspace(lower_bound, upper_bound, num_points)
+    points_y = np.random.uniform(-3, 3, num_points)
+    
+    # Sort the points to ensure they are strictly increasing
+    points_x.sort()
+    
+    return points_x, points_y
 
-if __name__ == '__main__':
+
+
+def main():
    
     # wx = [-90.0, -70.5, -35.0, -20.5, -10.0, 0.0]
-    wx = [-5.0, 30.0, 40, 60, 80, 100, 120]
-    wy = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    # wx = [-5.0, 30.0, 40, 60, 80, 81, 82]
+    wx, wy = generate_waypoints()
+    # wy = [0.0, 0.0, 0.0, 0.0, 0.0, -5.0, -15.0]
 
     ob = np.array(([20.0, 3.0],[20.0, 0.0],[50.0,0.0]))
-                    
     # ob = np.array([[50.0, 0.0]])
    
         
@@ -282,7 +295,7 @@ if __name__ == '__main__':
 
     global_path_data = [(x_spline[i],y_spline[i])for i in range(len(x_spline))]
     
-    current_state = state(-4,0,0,0)
+    current_state = state(wx[0],wy[0],0,0)
   
     tree = KDTree(global_path_data)
 
@@ -292,82 +305,105 @@ if __name__ == '__main__':
     print("starting")
     j=1
 
+    current_state_buffer = []
+    current_goal_buffer = []
+    selected_traj_buffer = []
     
     for i in range(SIM_LOOP):
-        plt.cla()
+        # plt.cla()
 
         # for stopping simulation with the esc key.
         plt.gcf().canvas.mpl_connect(
             'key_release_event',
             lambda event: [exit(0) if event.key == 'escape' else None])
 
-        goal = state(wx[j],wy[j],0,0)
+        # goal = state(wx[j],wy[j],0,0)
+        # goal = state(x_spline[j],y_spline[j],0,0)
         # print(goal.x, goal.y)
 
-     
+        # query the next goal from the tree 
+        _, idx = tree.query((current_state.x, current_state.y))
+        # print(idx)
+
+        last_goal = len(x_spline)-1
+        goal_track_pt = min(last_goal, idx + future_goal)
+        goal = state(x_spline[goal_track_pt], y_spline[goal_track_pt],0,0)
+
+
         obs_x = ob[:,0]
         obs_y = ob[:,1]
        
 
         bd_x, bd_y, box_dimension = generate_window(current_state)
         obs_list = append_obs_list(ob,box_dimension)
+        obs_list= []
 
         nt_state, select_traj, all_traj = main_loop(current_state, goal, obs_list)
         
+        current_state_buffer.append(current_state)
+        current_goal_buffer.append(goal)
+        selected_traj_buffer.append(select_traj)
+
+
         current_state = nt_state
         x_car,y_car = plot_car(current_state)
         
 
         #checks the next point of the global points
         if np.sqrt((current_state.x - goal.x)**2 + (current_state.y - goal.y)**2) <= GOAL_THRESHOLD:
-            if (j==len(wx)-1):
-                break  
-            else:
-                j+=1 
+            if (goal_track_pt==len(x_spline)-1):
+                return current_state_buffer, current_goal_buffer, selected_traj_buffer
+                # break  
+            # else:
+            #     j+=1 
 
 
         # plotting functions 
-        select_traj_x = []
-        select_traj_y = []
+        # select_traj_x = []
+        # select_traj_y = []
 
-        if (plot_trajectory):
-            black_traj_x = []
-            black_traj_y = []
+        # if (plot_trajectory):
+        #     black_traj_x = []
+        #     black_traj_y = []
 
-            # all trajectories
-            for traj in all_traj:
-                temp_traj_x = []
-                temp_traj_y = []
-                for pt in traj:
-                    temp_traj_x.append(pt.x)
-                    temp_traj_y.append(pt.y)
-                black_traj_x.append(temp_traj_x)
-                black_traj_y.append(temp_traj_y)
+        #     # all trajectories
+        #     for traj in all_traj:
+        #         temp_traj_x = []
+        #         temp_traj_y = []
+        #         for pt in traj:
+        #             temp_traj_x.append(pt.x)
+        #             temp_traj_y.append(pt.y)
+        #         black_traj_x.append(temp_traj_x)
+        #         black_traj_y.append(temp_traj_y)
 
-            plt.plot(np.array(black_traj_x),np.array(black_traj_y),'--',color='red')
-
-
-        # the selected trajectory 
-        for pt in select_traj:
-            select_traj_x.append(pt.x)
-            select_traj_y.append(pt.y)
-
-        if (show_window):
-            plt.plot(bd_x,bd_y,'-',color='red')
+        #     plt.plot(np.array(black_traj_x),np.array(black_traj_y),'--',color='red')
 
 
-        plt.plot(np.array(select_traj_x),np.array(select_traj_y),'-',color='black')
-        plt.plot(obs_x,obs_y,'o',color='blue')
-        plt.plot(goal.x,goal.y,'o',color='red')
-        plt.plot(x_car,y_car,'-')        
-        plt.plot(x_spline,y_spline,'-')
-        plt.plot(x_road_spline,y_road_spline_upper_bound,'-',color='black')
-        plt.plot(x_road_spline,y_road_spline_lower_bound,'-',color='black')
-        plt.grid(True)
-        plt.xlim(nt_state.x - area, nt_state.x + area)
-        plt.ylim(nt_state.y - area, nt_state.y + area)
-        plt.title(current_state.velocity)
-        plt.pause(0.000000001)
+        # # the selected trajectory 
+        # for pt in select_traj:
+        #     select_traj_x.append(pt.x)
+        #     select_traj_y.append(pt.y)
+
+        # if (show_window):
+        #     plt.plot(bd_x,bd_y,'-',color='red')
+
+
+        # plt.plot(np.array(select_traj_x),np.array(select_traj_y),'-',color='black')
+        # plt.plot(obs_x,obs_y,'o',color='blue')
+        # plt.plot(goal.x,goal.y,'o',color='red')
+        # plt.plot(x_car,y_car,'-')        
+        # plt.plot(x_spline,y_spline,'-')
+        # plt.plot(x_road_spline,y_road_spline_upper_bound,'-',color='black')
+        # plt.plot(x_road_spline,y_road_spline_lower_bound,'-',color='black')
+        # plt.grid(True)
+        # plt.xlim(nt_state.x - area, nt_state.x + area)
+        # plt.ylim(nt_state.y - area, nt_state.y + area)
+        # plt.title(current_state.velocity)
+        # plt.pause(0.000000001)
         
 
-    print("finished")
+    # print("finished")
+
+
+if __name__ == "__main__":
+    main()
